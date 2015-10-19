@@ -192,6 +192,11 @@ text-decoration:none;
 text-decoration:none;
 color:black;
 }
+#next_button{
+display:none;
+font-size: 20px;
+cursor: pointer;
+}
     </style>
 </head>
 
@@ -217,7 +222,7 @@ else
 
 
 <div id="player"></div>
-<a style="font-size: 20px;cursor: pointer;display: block" nohref onClick="change_video()">(Next)</a>
+<a id="next_button" nohref onClick="change_video()">(Next)</a>
 <script src="http://www.youtube.com/player_api"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
@@ -249,6 +254,9 @@ else
             youtube_id.reverse();
             // create youtube player
 	    var player;
+	    var first_song = youtube_id.pop();
+	    if(!first_song || first_song=='')
+		return;
             player = new YT.Player('player', {
               height: '390',
               width: '640',
@@ -258,6 +266,7 @@ else
                 'onStateChange': onPlayerStateChange
               }
             });
+	    $('#next_button')[0].style.display="block";
 	    context = player;
         }
 
@@ -276,6 +285,7 @@ else
 
 	function change_video() {
 		if(youtube_id.length == 0) {
+			$('#next_button')[0].style.display="none";
 			alert("Lets go somewhere else, and listen those songs. This search query is done.");
 			return;
 		}
@@ -335,14 +345,19 @@ class MyDB extends SQLite3
   }
 }
 $db = new MyDB();
-
+$no_result = TRUE;
 foreach($inputs as $input) {
 	$output = $db->query('SELECT * FROM data WHERE name LIKE "%'.$input.'" OR name LIKE "'.$input.'%" OR name LIKE "'.$input.'" OR name LIKE "%'.$input.'%" LIMIT 10');
 	while($row = $output->fetchArray()) {
+		$no_result = FALSE;
 		print_new($row['id'], $row['link'], $row['name'],$row['name_id'],$row['by']);
 	}
 }
-
+if($no_result) {
+	echo '<div class="k">
+	<div class="link2"><h2>No result found for the given keywords.</h2></div>
+	</div>';
+}
 echo "Input word: $input_old\n<br>";
 
 
