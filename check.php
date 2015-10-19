@@ -215,18 +215,88 @@ else
 	<button type="submit">Search</button>
 </form>
 
+
+<div id="player"></div>
+<a style="font-size: 20px;cursor: pointer;display: block" nohref onClick="change_video()">(Next)</a>
+<script src="http://www.youtube.com/player_api"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+
+<script>
+
+
+	var youtube_id = [];
+	$('.link').each(function(){
+		var inner = $(this).text();
+		var yt_id = inner.split('v=')[1];
+		if(yt_id) {
+			youtube_id.push(yt_id);
+		}
+	});
+	
+        // create youtube player
+        var context;
+	var youtube_id = [];
+	var first_video = youtube_id[0];
+        function onYouTubePlayerAPIReady() {
+            $('.link').each(function(){
+                    var inner = $(this).text();
+                    var yt_id = inner.split('v=')[1];
+                    if(yt_id) {
+                            youtube_id.push(yt_id);
+                    }
+            });
+            youtube_id.reverse();
+            // create youtube player
+	    var player;
+            player = new YT.Player('player', {
+              height: '390',
+              width: '640',
+              videoId: youtube_id.pop(),
+              events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+              }
+            });
+	    context = player;
+        }
+
+        // autoplay video
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+
+        // when video ends
+        function onPlayerStateChange(event) {  
+		if(event.data === 0) {
+			change_video();
+			event.target.playVideo();
+		}
+        }
+
+	function change_video() {
+		if(youtube_id.length == 0) {
+			alert("Lets go somewhere else, and listen those songs. This search query is done.");
+			return;
+		}
+		context.loadVideoById(youtube_id.pop());
+	}
+
+</script>
+
+<br/><br/>
 <div id="mains">
 Matching links are as follows :<br>
 
 
 
 <?php
-function print_new($link,$member,$id,$name)
+function print_new($id,$link,$name,$name_id,$by)
 {
 
 echo '
 <div class="k">
-<a href="http://www.facebook.com/'.$member['id'].'" target="_blank"><img id="poster" src="https://graph.facebook.com/'.$member['id'].'/picture?type=large"></img></a>
+<a href="http://www.facebook.com/'.$name_id.'" target="_blank"><img id="poster" src="https://graph.facebook.com/'.$name_id.'/picture?type=large"></img></a>
 <div class="link2"><a href="http://www.facebook.com/'.$id.'" target="_blank">'.$name.'</a></div>
 <div class="link"><a href="http://www.facebook.com/'.$id.'" target="_blank">'.$link.'</a></div>
 </div>
@@ -256,32 +326,21 @@ $input=substr($input,8);
 $check="";
 }
 $input_old=$input;
-$links = json_decode(file_get_contents("database.txt"));
-$names = json_decode(file_get_contents("name.txt"));
-$from = json_decode(file_get_contents("from.txt"),true);
-$ids = json_decode(file_get_contents("id.txt"),true);
 $inputs = explode(" ",$input);
-$l=sizeof($inputs);
-foreach ($links as $link) {
-	$count=0;
-	similar_text($input_old, $link, $percent1);
-	similar_text($link, $input_old, $percent2);
-	if($percent1>50||$percent2>50)
-	 print_new($link,$from[$k],$ids[$k],$names[$k]);
-	else
-	{
-		foreach($inputs as $input)
-		{
-			if (strpos($link,$input) !== false) {
-			$count++;	
-			}
-		}
-		if($count>($l/2))
-		{
-		print_new($link,$from[$k],$ids[$k],$names[$k]);
-		}
+class MyDB extends SQLite3
+{
+  function __construct()
+  {
+    $this->open('database/test.db');
+  }
+}
+$db = new MyDB();
+
+foreach($inputs as $input) {
+	$output = $db->query('SELECT * FROM data WHERE name LIKE "%'.$input.'" OR name LIKE "'.$input.'%" OR name LIKE "'.$input.'" OR name LIKE "%'.$input.'%" LIMIT 10');
+	while($row = $output->fetchArray()) {
+		print_new($row['id'], $row['link'], $row['name'],$row['name_id'],$row['by']);
 	}
-	$k++;
 }
 
 echo "Input word: $input_old\n<br>";
@@ -312,7 +371,7 @@ echo "Input word: $input_old\n<br>";
 require 'login/src/facebook.php';
 $facebook = new Facebook(array(
   'appId'  => '296121763865327',
-  'secret' => 'You_read_its_secret_so_i_cant_give_it_to_you',
+  'secret' => '77969da8c1b603110dfb119cc4038fc8',
 ));
 $user = $facebook->getUser();
 if ($user) {
@@ -329,7 +388,7 @@ if ($user) {
 else
 {
 ?>
-<a href="<?php echo $facebook->getLoginUrl(); ?>"><img src="fb.png" alt="Login" style="width:15%;"/></a>
+<a href="<?php echo $facebook->getLoginUrl(array("scope" => "user_groups")); ?>"><img src="fb.png" alt="Login" style="width:15%;"/></a>
 <?php
 }
 ?>

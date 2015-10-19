@@ -149,17 +149,15 @@ text-decoration:none;
 </form>
 
 <div id="group-link">
-Group Crawled : 
-<a href="https://www.facebook.com/groups/jiitlug/" target="_blank">https://www.facebook.com/groups/jiitlug/</a>
+Collection credit : Every member of <a href="https://www.facebook.com/groups/IIITH.MusicLovers/" target="_blank">https://www.facebook.com/groups/IIITH.MusicLovers/</a>
 <br>
-Designed and Developed By <a href="https://www.facebook.com/skbly7" target="_blank">
-Shivam Khandelwal</a>
+<a href="https://www.facebook.com/skbly7" target="_blank" style="position:absolute;bottom:10px;">skbly7</a>
 </div>
 <?php
 require 'login/src/facebook.php';
 $facebook = new Facebook(array(
   'appId'  => '296121763865327',
-  'secret' => 'You_read_its_secret_so_i_cant_give_it_to_you',
+  'secret' => '77969da8c1b603110dfb119cc4038fc8',
 ));
 $user = $facebook->getUser();
 if ($user) {
@@ -176,7 +174,7 @@ if ($user) {
 else
 {
 ?>
-<a href="<?php echo $facebook->getLoginUrl(); ?>"><img src="fb.png" alt="Login" style="width:15%;"></a>
+<a href="<?php echo $facebook->getLoginUrl(array("scope" => "user_groups")); ?>"><img src="fb.png" alt="Login" style="width:15%;"></a>
 <?php
 }
 ?>
